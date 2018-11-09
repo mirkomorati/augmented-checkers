@@ -1,4 +1,4 @@
-classdef Checkers
+classdef Checkers < handle
     properties
         board = zeros(8,8);
         p1;
@@ -21,7 +21,7 @@ classdef Checkers
                          9 0 10 0 11 0 12 0];
         end
         
-        function obj = next(obj)
+        function next(obj)
             [x, y] = ginput(1);
             if obj.turn
                 p = obj.p1;
@@ -36,17 +36,20 @@ classdef Checkers
                 return;
             end
             
-            obj.turn = ~obj.turn;
-            
             p.getPawn(pawn).select();
             waitforbuttonpress;
             where = get(gcf, 'CurrentCharacter');
             [r, c] = find(obj.board == (pawn + off));
-            obj = obj.move(p, pawn, off, where, r, c);
+            valid = obj.move(p, pawn, off, where, r, c);
+            if valid
+                obj.turn = ~obj.turn;
+            else
+                p.getPawn(pawn).blinkErr();
+            end
             p.getPawn(pawn).deselect();
         end
     
-        function obj = move(obj, p, pawn, off, where, r, c)
+        function valid = move(obj, p, pawn, off, where, r, c)
             switch where
                 case 'q'
                     rn = r-1;
@@ -61,32 +64,40 @@ classdef Checkers
                     rn = r+1;
                     cn = c+1;
             end
-            if obj.isMoveValid(rn,cn)
+            valid = obj.isMoveValid(pawn + off,rn,cn);
+            if valid
                 obj.board(r,c) = 0;
                 p.getPawn(pawn).move(r, c, rn, cn);
                 if obj.board(rn,cn) ~= 0
                     if strcmp(p.color, 'red')
                         if obj.board(rn,cn) >= 13 && obj.board(rn,cn) <= 24
                             obj.p2.deletePawn(obj.board(rn,cn) - 12);
-                            obj = obj.move(p, pawn, off, where, rn, cn);
+                            obj.move(p, pawn, off, where, rn, cn);
                         end
                     else
                         if obj.board(rn,cn) >= 1 && obj.board(rn,cn) <= 12 
                             obj.p1.deletePawn(obj.board(rn,cn));
-                            obj = obj.move(p, pawn, off, where, rn, cn);
+                            obj.move(p, pawn, off, where, rn, cn);
                         end
                     end
-                    
                 else
                     obj.board(rn,cn) = pawn + off;
                 end
             end
         end
 
-        function a = isMoveValid(obj, r, c)
+        function a = isMoveValid(obj, pawn, r, c)
             [i, j] = size(obj.board);
-            a = [];
-            a = r <= i & r >= 1 & c <= j & c >= 1;
+            try
+                obj.board(r,c);
+            catch
+                a = false;
+                return;
+            end
+            a = r <= i & r >= 1 & c <= j & c >= 1 &...
+                (obj.board(r,c) == 0 |...
+                (pawn >= 1 & pawn <= 12 & obj.board(r,c)>= 13 & obj.board(r,c) <= 24) |...
+                (pawn >= 13 & pawn <= 24 & obj.board(r,c)>= 1 & obj.board(r,c) <= 12));
         end
         
     end

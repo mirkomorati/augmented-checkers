@@ -82,8 +82,7 @@ p2.draw();
 
 c = Checkers(p1, p2);
 while true
-    c = c.next();
-    c.board
+    c.next();
 end
 
 hold off

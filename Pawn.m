@@ -73,5 +73,14 @@ classdef Pawn
         function deselect(obj)
             set(obj.patch, 'FaceColor', obj.color);
         end
+        
+        function blinkErr(obj)
+            for i = 1:20
+                set(obj.patch, 'EdgeColor', 'white', 'FaceColor', obj.color);
+                drawnow;
+                set(obj.patch, 'EdgeColor', obj.color, 'FaceColor', 'white');
+                drawnow;
+            end
+        end
     end
 end
