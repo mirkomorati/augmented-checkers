@@ -30,6 +30,8 @@ f = camera.fc;
 c = camera.cc;
 k = camera.kc;
 
+global params;
+
 params.dX = dX;
 params.dY = dY;
 params.om = om;
@@ -43,11 +45,6 @@ figure(3)
 imshow(img);
 hold on
 
-p1 = Player('red', params);
-p2 = Player('green', params);
-
-p1.draw();
-p2.draw();
 
 %{
 while true
@@ -76,21 +73,17 @@ while true
 end
 %}
 
+p1 = Player('red');
+p2 = Player('green');
+
+p1.draw();
+p2.draw();
+
+
+c = Checkers(p1, p2);
 while true
-    [clickX, clickY] = ginput(1);
-    pawn = p1.getPawnHit(clickX, clickY);
-    if isempty(pawn)
-        continue;
-    end
-    p1.getPawn(pawn).select();
-    w = waitforbuttonpress;
-    p = get(gcf, 'CurrentCharacter');
-    if p == 'd'
-        p1.move(pawn, 'r');
-    elseif p == 'a'
-        p1.move(pawn, 'l');
-    end
-    p1.getPawn(pawn).deselect();
+    c = c.next();
+    c.board
 end
 
 hold off

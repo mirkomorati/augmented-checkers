@@ -1,73 +1,77 @@
 classdef Pawn
     properties
-        Color;
-        Size = 16;
-        Patch;
-        Base;
-        Camera;
+        color;
+        size = 16;
+        patch;
+        base;
     end
    
     methods
-        function pawn = Pawn(color, camera)
-            if nargin < 2
+        function pawn = Pawn(color)
+            if nargin < 1
                 error('Too few arguments.');
             end
             
-            pawn.Color = color;
-            pawn.Camera = camera;  
-            pawn.Base = [0 0 1 1 0;
+            pawn.color = color;  
+            pawn.base = [0 0 1 1 0;
                          0 1 1 0 0;
-                         0 0 0 0 0] .* pawn.Size;
-            pawn.Patch = patch(0, 0, 0, 'EdgeColor', color, 'FaceColor', color);
+                         0 0 0 0 0] .* pawn.size;
+            pawn.patch = patch(0, 0, 0, 'EdgeColor', color, 'FaceColor', color);
         end    
        
-        function pawn = set.Color(pawn, color)
-            pawn.Color = color;
+        function obj = set.color(obj, color)
+            obj.color = color;
         end
 
-        function draw(pawn, x, y)
+        function draw(obj, x, y)
+            global params;
             if nargin < 3
                 return
             end
-            pp = pawn.Base;
-            pp(1,:) = pp(1,:) + (x+1) * pawn.Camera.dX + pawn.Camera.dX / 2 - pawn.Size / 2;
-            pp(2,:) = pp(2,:) + y * pawn.Camera.dY + pawn.Camera.dY / 2 - pawn.Size / 2;
+            pp = obj.base;
+            pp(1,:) = pp(1,:) + (x+1) * params.dX + params.dX / 2 - obj.size / 2;
+            pp(2,:) = pp(2,:) + y * params.dY + params.dY / 2 - obj.size / 2;
             
-            [xp] = project_points(pp, pawn.Camera.om, pawn.Camera.T, ...
-                                  pawn.Camera.f, pawn.Camera.c, pawn.Camera.k);
+            [xp] = project_points(pp, params.om, params.T, ...
+                                  params.f, params.c, params.k);
 
-            set(pawn.Patch, 'Xdata', xp(1,:), 'Ydata', xp(2,:)); 
+            set(obj.patch, 'Xdata', xp(1,:), 'Ydata', xp(2,:)); 
         end
         
-        function move(pawn, x, y, xx, yy)
+        function obj = setSize(obj, s)
+            obj.size = s;
+        end
+        
+        function move(obj, x, y, xx, yy)
             d = pdist([x y; xx yy], 'euclidean');
             d = round(3*d);
             xvals = linspace(x, xx, d);
             yvals = linspace(y, yy, d);
             for i = 1:size(xvals')
-                draw(pawn, xvals(i), yvals(i));
+                draw(obj, xvals(i), yvals(i));
                 pause(0.05);
             end
         end
         
-        function movePx(pawn, r, c, x, y)
+        function movePx(obj, r, c, x, y)
+            global params;
             pp = [0; 0; 0];
-            xp0 = project_points(pp, pawn.Camera.om, pawn.Camera.T, ...
-                                  pawn.Camera.f, pawn.Camera.c, pawn.Camera.k);
+            xp0 = project_points(pp, params.om, params.T, ...
+                                  params.f, params.c, params.k);
             xp = ([x;y] - xp0)/30;
-            pawn.move(r, c, round(xp(1)),round(xp(2)));
+            obj.move(r, c, round(xp(1)),round(xp(2)));
         end
         
-        function xp = getPoints(pawn)
-            xp = [get(pawn.Patch, 'Xdata')'; get(pawn.Patch, 'Ydata')'];
+        function xp = getPoints(obj)
+            xp = [get(obj.patch, 'Xdata')'; get(obj.patch, 'Ydata')'];
         end
         
-        function select(pawn)
-            set(pawn.Patch, 'FaceColor', 'blue');
+        function select(obj)
+            set(obj.patch, 'FaceColor', 'blue');
         end
         
-        function deselect(pawn)
-            set(pawn.Patch, 'FaceColor', pawn.Color);
+        function deselect(obj)
+            set(obj.patch, 'FaceColor', obj.color);
         end
     end
 end
